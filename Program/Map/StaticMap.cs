@@ -43,6 +43,37 @@ public unsafe class StaticMap
         var bytes_vertexData = Marshal.SizeOf<HeightmapVertex>() * Constants.VERTICES_PER_CHUNK;
         var offset = (HeightmapVertex*)Allocator.Alloc(bytes_vertexData);
         var write = offset;
+        
+        // Here what we want is to create a for loop that iterate on all level of details
+        // if the the size is 1024 
+        // then we want the level of detail to be bigger then its previous,
+        // For example -
+        // All the chunk is 1024
+        // the the first level of details we go throught each vertex lets assume it has 64 x 64
+        // then we'll go on the second which will 128 x 128
+        // then 256 x 256
+        // etc
+        // imagine this - 
+        //
+        // 3 3 3 3 3 3 3
+        // 3 3 3 3 3 3 3
+        // 3 3 3 3 3 3 3
+        // 2 2 2 2 3 3 3
+        // 2 2 2 2 3 3 3 
+        // 1 1 2 2 3 3 3 
+        // Y 1 2 2 3 3 3
+        // 1 1 2 2 3 3 3
+        // 2 2 2 2 3 3 3
+        // 2 2 2 2 3 3 3
+        // 3 3 3 3 3 3 3
+        // 3 3 3 3 3 3 3
+        // 3 3 3 3 3 3 3
+        // assume I did the (3) 4 times
+        // Each level of detail shows twices time from the level that was previous
+
+        // To start we need to calculate how many levels we (that of course dependes on the chunk 
+        // size and the camera pos from its origin to get the origin of course we need some how to get 
+        // its gl_position and that what will do tommrow)
         for (int z = 0; z < Constants.HEIGHTMAP_SIZE; z++)
         {
         // Generate 32 triangle strips

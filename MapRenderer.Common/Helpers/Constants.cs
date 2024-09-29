@@ -58,7 +58,8 @@ void main()
     float runIndex = mod(gl_VertexID, VERTICES_PER_RUN);
     float clampedIndex = clamp(runIndex - 1.0, 0.0, VERTICES_PER_RUN_NOT_DEGENERATE); // First and last are degenerate
 
-
+    // here we need to add 
+    // both in x and the z the posiotion of the chunk (if we want to load more chunks)
     // X increments every 2 vertices
     float xPos = floor(clampedIndex / 2.0);
 
