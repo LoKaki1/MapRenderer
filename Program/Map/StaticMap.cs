@@ -74,6 +74,7 @@ public unsafe class StaticMap
         // To start we need to calculate how many levels we (that of course dependes on the chunk 
         // size and the camera pos from its origin to get the origin of course we need some how to get 
         // its gl_position and that what will do tommrow)
+        
         for (int z = 0; z < Constants.HEIGHTMAP_SIZE; z++)
         {
         // Generate 32 triangle strips
