@@ -21,7 +21,7 @@ public class CameraController
 
     float FieldOfView { get; set; } = 50.0f / 180.0f * MathF.PI;
     float Aspect => m_Window.Size.X / (float)m_Window.Size.Y;
-    float NearPlane { get; set; }  = 1.0f;
+    float NearPlane { get; set; } = 1.0f;
     float FarPlane { get; set; } = 256.0f;
 
     public CameraController(IKeyboard m_Keyboard, IMouse Mouse, IWindow Window)
@@ -38,7 +38,7 @@ public class CameraController
 
     private void OnKeyDown(IKeyboard keyboard, Key key, int arg3)
     {
-        if(key == Key.Escape)
+        if (key == Key.Escape)
         {
             m_CaptureMouse = !m_CaptureMouse;
 
@@ -55,12 +55,13 @@ public class CameraController
 
         return view * proj;
     }
+
     public void Update()
     {
         // Update camera roatation
         if (m_CaptureMouse)
         {
-          var diff = m_LastMouse - m_Mouse.Position;
+            var diff = m_LastMouse - m_Mouse.Position;
 
             Yaw -= diff.X * 0.003f;
             Pitch += diff.Y * 0.003f;

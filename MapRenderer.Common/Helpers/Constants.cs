@@ -56,12 +56,14 @@ float rand3(vec3 c) { return fract(sin(dot(c.xyz, vec3(12.9898, 78.233, 133.719)
 void main()
 {{    
     float runIndex = mod(gl_VertexID, VERTICES_PER_RUN);
+    
+    float level = log2(gl_VertexID + 1);
     float clampedIndex = clamp(runIndex - 1.0, 0.0, VERTICES_PER_RUN_NOT_DEGENERATE); // First and last are degenerate
 
     // here we need to add 
     // both in x and the z the posiotion of the chunk (if we want to load more chunks)
     // X increments every 2 vertices
-    float xPos = floor(clampedIndex / 2.0);
+    float xPos = floor(clampedIndex/ 2.0);
 
 
     // Z increments every N vertices
@@ -70,7 +72,6 @@ void main()
 
     // Move every 2nd vertex 1 unit on the z axis, to create a triangle
     zPos += mod(clampedIndex, 2.0);
-
 
     // Render to the screen
     vec3 pos = vec3(xPos, aAltitude, zPos);
