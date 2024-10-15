@@ -34,7 +34,7 @@ void main()
 }
     
     ";
-    public const int HEIGHTMAP_SIZE = 1024;
+    public const int HEIGHTMAP_SIZE = 256;
     public const int HEIGHTMAP_SIZE_SQUARED = HEIGHTMAP_SIZE * HEIGHTMAP_SIZE;
 
     public const int VERTICES_PER_RUN = HEIGHTMAP_SIZE * 2 + 4;
@@ -56,22 +56,22 @@ float rand3(vec3 c) { return fract(sin(dot(c.xyz, vec3(12.9898, 78.233, 133.719)
 void main()
 {{    
     float runIndex = mod(gl_VertexID, VERTICES_PER_RUN);
-    
+    float lod = 4;
     float level = log2(gl_VertexID + 1);
     float clampedIndex = clamp(runIndex - 1.0, 0.0, VERTICES_PER_RUN_NOT_DEGENERATE); // First and last are degenerate
 
     // here we need to add 
     // both in x and the z the posiotion of the chunk (if we want to load more chunks)
     // X increments every 2 vertices
-    float xPos = floor(clampedIndex/ 2.0);
+    float xPos = floor(clampedIndex/ 2.0) * lod;
 
 
     // Z increments every N vertices
-    float zPos = floor(gl_VertexID / VERTICES_PER_RUN);
+    float zPos = floor(gl_VertexID / VERTICES_PER_RUN) * lod;
 
 
     // Move every 2nd vertex 1 unit on the z axis, to create a triangle
-    zPos += mod(clampedIndex, 2.0);
+    zPos += mod(clampedIndex, 2.0) * lod;
 
     // Render to the screen
     vec3 pos = vec3(xPos, aAltitude, zPos);
