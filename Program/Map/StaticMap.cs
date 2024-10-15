@@ -42,10 +42,10 @@ public unsafe class StaticMap
     void GenerateBuffer(float height)
     {
         IsUpdating = true;
-        var bytes_vertexData = Marshal.SizeOf<HeightmapVertex>() * Constants.VERTICES_PER_CHUNK;
+        var lod = 4;
+        var bytes_vertexData = Marshal.SizeOf<HeightmapVertex>() * Constants.VERTICES_PER_CHUNK / lod;
         var offset = (HeightmapVertex*)Allocator.Alloc(bytes_vertexData);
         var write = offset;
-
         // Here what we want is to create a for loop that iterate on all level of details
         // if the the size is 1024 
         // then we want the level of detail to be bigger then its previous,
@@ -128,7 +128,8 @@ public unsafe class StaticMap
 
         //     // now we iterate on each of the rows and append this to the frame buffer
         // } 
-        for (int z = 0; z < Constants.HEIGHTMAP_SIZE; z++)
+        var heightMapSize = Constants.HEIGHTMAP_SIZE / lod;
+        for (int z = 0; z < heightMapSize; z++)
         {
             // Generate 32 triangle strips
             int x = 0;
@@ -153,7 +154,7 @@ public unsafe class StaticMap
             write++->Reset(altitude);
 
             x += 1;
-            for (; x <= Constants.HEIGHTMAP_SIZE; x++)
+            for (; x <= heightMapSize; x++)
             {
                 altitude = GetHeight(x, z, height);
                 write++->Reset(altitude);
@@ -168,16 +169,16 @@ public unsafe class StaticMap
             write++->Reset(altitude);
         }
 
-        DispatcherQueue.Enqueue(() => BufferData(offset, bytes_vertexData));
+        DispatcherQueue.Enqueue(() => BufferData(offset, bytes_vertexData, lod));
     }
     public void Update(float height)
     {
         Task.Run(() => GenerateBuffer(height));
     }
-    public void BufferData(HeightmapVertex* offset, int bytes_vertexData)
+    public void BufferData(HeightmapVertex* offset, int bytes_vertexData, int lod)
 
     {
-        Buffer.BufferData(Constants.VERTICES_PER_CHUNK, offset);
+        Buffer.BufferData(Constants.VERTICES_PER_CHUNK / lod, offset);
         Allocator.Free(ref offset, ref bytes_vertexData);
         IsUpdating = false;
     }
