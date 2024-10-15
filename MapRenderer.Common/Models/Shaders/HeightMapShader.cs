@@ -10,12 +10,14 @@ public class HeightMapShader
 
     public ShaderValue<Matrix4x4> ModelViewProjectionMatrix { get; set; }
     public ShaderValue<bool> ShowWireframe { get; set; }
+    public ShaderValue<float> Lod { get; set; }
     public HeightMapShader(string vertexShader, string fragmentShader)
     {
         Shader = new(vertexShader, fragmentShader);
 
         ModelViewProjectionMatrix = new(Shader, "mvp");
         ShowWireframe = new(Shader, "showWireframe");
+        Lod = new(Shader, "lod");
     }
 
     public void UseProgram()

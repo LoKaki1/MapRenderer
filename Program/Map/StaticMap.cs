@@ -16,31 +16,33 @@ public unsafe class StaticMap
 {
 
     private readonly CameraController m_Camera;
+    private readonly int m_Lod;
 
     public HeightmapVertexBuffer Buffer { get; set; }
-
     private readonly IKeyboard m_Keyboard;
-
-    public HeightMapShader HeightMapShader { get;  set; }
+    public HeightMapShader HeightMapShader { get; set; }
     public bool IsMapReady { get; private set; }
 
     public StaticMap(CameraController cameraController,
-                     IKeyboard keyboard)
+                     IKeyboard keyboard,
+                     int lod = 1)
     {
         Buffer = new();
-        
+
         m_Camera = cameraController;
-        GenerateBuffer();
-   
+        m_Lod = lod;
+        GenerateBuffer(lod);
+
         m_Keyboard = keyboard;
         HeightMapShader = ShaderLoader.CreateDemo();
     }
-    
-    float GetHeight(int x, int z) => MathF.Sin(x * 0.5f) + MathF.Cos(z * 0.25f) * 2;
 
-    void GenerateBuffer()
+    float GetHeight(int x, int z) => MathF.Sin(x * 0.5f) + MathF.Cos(z * 0.25f) * m_Lod;
+
+    void GenerateBuffer(int lod = 1)
     {
-        var bytes_vertexData = Marshal.SizeOf<HeightmapVertex>() * Constants.VERTICES_PER_CHUNK;
+        var size = Constants.VERTICES_PER_CHUNK / (lod * lod);
+        var bytes_vertexData = Marshal.SizeOf<HeightmapVertex>() * size;
         var offset = (HeightmapVertex*)Allocator.Alloc(bytes_vertexData);
         var write = offset;
 
@@ -75,123 +77,127 @@ public unsafe class StaticMap
         // size and the camera pos from its origin to get the origin of course we need some how to get 
         // its gl_position and that what will do tommrow)
 
-        var levels = Math.Log2(Constants.HEIGHTMAP_SIZE);
+        // var levels = Math.Log2(Constants.HEIGHTMAP_SIZE);
 
-        for (int i = 0; i < levels; i++)
-        {
-            // for start lets just caluculate the chunk size base on the idea above
-            // every level should contains the same number of vertcies
-            // how do we do that?
-            // first lets say how many layers we want 
-            
-            // then to we need to calculate how many vertecies are in the layer
-
-
-            int stepSize = 1 << i; // 1, 2, 4, 8, 16, ...
-
-            var layers = stepSize * stepSize;
-            for (int z = 0; z < layers; z += stepSize) {
-                int x = 0;
-
-                var altitude0 = GetHeight(x, z);
-                var altitude1 = GetHeight(x, z + stepSize);
-                var altitude2 = GetHeight(x + stepSize, z);
-
-                // First vertex is a degenerate (to restart triangle strip)
-                write++->Reset(altitude0);
-
-                // Create the first triangle in the strip
-                write++->Reset(altitude0);
-                write++->Reset(altitude1);
-                write++->Reset(altitude2);
-
-                // Iterate through the rest of the strip with stepSize
-                x += stepSize;
-                var altitude = GetHeight(x, z + stepSize);
-                write++->Reset(altitude);
-
-                x += stepSize;
-                for (; x <= layers; x += stepSize) {
-                    altitude = GetHeight(x, z);
-                    write++->Reset(altitude);
-
-                    altitude = GetHeight(x, z + stepSize);
-                    write++->Reset(altitude);
-                }
-
-                // Degenerate to end the strip
-                altitude = GetHeight(x - stepSize, z + stepSize);
-                write++->Reset(altitude);
-            }
-            
-            // now we iterate on each of the rows and append this to the frame buffer
-        } 
-        // for (int z = 0; z < Constants.HEIGHTMAP_SIZE; z++)
+        // for (int i = 0; i < levels; i++)
         // {
-        // // Generate 32 triangle strips
-        //     int x = 0;
+        //     // for start lets just caluculate the chunk size base on the idea above
+        //     // every level should contains the same number of vertcies
+        //     // how do we do that?
+        //     // first lets say how many layers we want 
 
-        //     var altitude0 = GetHeight(x, z);
-        //     var altitude1 = GetHeight(x, z + 1);
-        //     var altitude2 = GetHeight(x + 1, z);
-
-
-        //     // First vertex is a degenerate
-        //     write++->Reset(altitude0); 
+        //     // then to we need to calculate how many vertecies are in the layer
 
 
-        //     // Create the first triangle
-        //     write++->Reset(altitude0);
-        //     write++->Reset(altitude1);
-        //     write++->Reset(altitude2);
+        //     int stepSize = 1 << i; // 1, 2, 4, 8, 16, ...
 
-        //     // Rest of the strip
-        //     x += 1;
-        //     var altitude = GetHeight(x, z + 1);
-        //     write++->Reset(altitude);
-
-        //     x += 1;
-        //     for (; x <= Constants.HEIGHTMAP_SIZE; x++)
+        //     var layers = stepSize * stepSize;
+        //     for (int z = 0; z < layers; z += stepSize)
         //     {
-        //         altitude = GetHeight(x, z);
+        //         int x = 0;
+
+        //         var altitude0 = GetHeight(x, z);
+        //         var altitude1 = GetHeight(x, z + stepSize);
+        //         var altitude2 = GetHeight(x + stepSize, z);
+
+        //         // First vertex is a degenerate (to restart triangle strip)
+        //         write++->Reset(altitude0);
+
+        //         // Create the first triangle in the strip
+        //         write++->Reset(altitude0);
+        //         write++->Reset(altitude1);
+        //         write++->Reset(altitude2);
+
+        //         // Iterate through the rest of the strip with stepSize
+        //         x += stepSize;
+        //         var altitude = GetHeight(x, z + stepSize);
         //         write++->Reset(altitude);
 
-        //         altitude = GetHeight(x, z + 1);
+        //         x += stepSize;
+        //         for (; x <= layers; x += stepSize)
+        //         {
+        //             altitude = GetHeight(x, z);
+        //             write++->Reset(altitude);
+
+        //             altitude = GetHeight(x, z + stepSize);
+        //             write++->Reset(altitude);
+        //         }
+
+        //         // Degenerate to end the strip
+        //         altitude = GetHeight(x - stepSize, z + stepSize);
         //         write++->Reset(altitude);
         //     }
 
-
-        //     // Degenerate
-        //     altitude = GetHeight(x - 1, z + 1);
-        //     write++->Reset(altitude);
+        //     // now we iterate on each of the rows and append this to the frame buffer
         // }
+        for (int z = 0; z < Constants.HEIGHTMAP_SIZE; z += lod)
+        {
+            // Generate 32 triangle strips
+            int x = 0;
 
-        Buffer.BufferData(Constants.VERTICES_PER_CHUNK, offset);
+            var altitude0 = GetHeight(x, z);
+            var altitude1 = GetHeight(x, z + lod);
+            var altitude2 = GetHeight(x + lod, z);
+
+
+            // First vertex is a degenerate
+            write++->Reset(altitude0);
+
+
+            // Create the first triangle
+            write++->Reset(altitude0);
+            write++->Reset(altitude1);
+            write++->Reset(altitude2);
+
+            // Rest of the strip
+            x += lod;
+            var altitude = GetHeight(x, z + lod);
+            write++->Reset(altitude);
+
+            x += lod;
+
+            for (; x <= Constants.HEIGHTMAP_SIZE; x += lod)
+            {
+                altitude = GetHeight(x, z);
+                write++->Reset(altitude);
+
+                altitude = GetHeight(x, z + lod);
+                write++->Reset(altitude);
+            }
+
+
+            // Degenerate
+            altitude = GetHeight(x - lod, z + lod);
+            write++->Reset(altitude);
+        }
+
+        Buffer.BufferData(size, offset);
         Allocator.Free(ref offset, ref bytes_vertexData);
 
         IsMapReady = true;
     }
 
 
-//     int CalculateLODLevel(const Vector3& cameraPosition, const Vector3& chunkCenter) {
-//     float distance = length(cameraPosition - chunkCenter);
+    //     int CalculateLODLevel(const Vector3& cameraPosition, const Vector3& chunkCenter) {
+    //     float distance = length(cameraPosition - chunkCenter);
 
-//     // Determine LOD level based on distance (tune distance thresholds as needed)
-//     if (distance < 100.0f) return 0; // Highest detail
-//     else if (distance < 200.0f) return 1;
-//     else if (distance < 400.0f) return 2;
-//     else if (distance < 800.0f) return 3;
-//     else return 4; // Lowest detail
-// }
+    //     // Determine LOD level based on distance (tune distance thresholds as needed)
+    //     if (distance < 100.0f) return 0; // Highest detail
+    //     else if (distance < 200.0f) return 1;
+    //     else if (distance < 400.0f) return 2;
+    //     else if (distance < 800.0f) return 3;
+    //     else return 4; // Lowest detail
+    // }
 
     public void Render()
     {
-                // Prepare the shader
+        // Prepare the shader
         HeightMapShader.UseProgram();
         var projection = m_Camera.GetViewProjection();
         HeightMapShader.ModelViewProjectionMatrix.Set(projection);
         var isSpacePressed = m_Keyboard.IsKeyPressed(Key.Space);
         HeightMapShader.ShowWireframe.Set(isSpacePressed);
+        HeightMapShader.Lod.Set(m_Lod);
 
         Gl.FrontFace(FrontFaceDirection.Ccw);
         Buffer.primitiveType = PrimitiveType.TriangleStrip;

@@ -13,8 +13,8 @@ namespace MapRenderer.Client;
 public unsafe class CameraMapClient
 {
     private readonly IWindow m_Window;
-    private  CameraController? m_Camera;
-    private  StaticMap? m_Map;
+    private CameraController? m_Camera;
+    private StaticMap? m_Map;
     private int m_Height;
     private int m_Width;
 
@@ -30,7 +30,7 @@ public unsafe class CameraMapClient
         options.Title = "gl_VertexID";
 
         m_Window = Window.Create(options);
-        
+
         GLFW = GlfwProvider.GLFW.Value;
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
@@ -45,14 +45,14 @@ public unsafe class CameraMapClient
             // Create an OpenGL Context
             Gl = m_Window.CreateOpenGL();
             // SilkOnDidCreateOpenGLContext();
-        
+
             // Precalculate input stuff
             var inputContext = m_Window.CreateInput();
             var keyboard = inputContext.Keyboards[0];
             var mouse = inputContext.Mice[0];
 
             m_Camera = new CameraController(keyboard, mouse, m_Window);
-            m_Map = new StaticMap(m_Camera, keyboard);
+            m_Map = new StaticMap(m_Camera, keyboard, 1);
             var currentWindow = (WindowHandle*)m_Window.Handle;
             GLFW.GetFramebufferSize(currentWindow, out int width, out int height);
 

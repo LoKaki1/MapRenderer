@@ -47,6 +47,7 @@ out vec2 vBary;
 flat out float vBrightness;
 
 uniform mat4 mvp;
+uniform float lod;
 
 const float VERTICES_PER_RUN = " + Constants.VERTICES_PER_RUN + @".0;
 const float VERTICES_PER_RUN_NOT_DEGENERATE = " + Constants.VERTICES_PER_RUN_NOT_DEGENERATE + @".0;
@@ -55,23 +56,24 @@ float rand3(vec3 c) { return fract(sin(dot(c.xyz, vec3(12.9898, 78.233, 133.719)
 
 void main()
 {{    
-    float runIndex = mod(gl_VertexID, VERTICES_PER_RUN);
-    
-    float level = log2(gl_VertexID + 1);
-    float clampedIndex = clamp(runIndex - 1.0, 0.0, VERTICES_PER_RUN_NOT_DEGENERATE); // First and last are degenerate
+
+    float V_PER_RUN = VERTICES_PER_RUN / (lod );
+    float V_PER_RUN_NOT_DEGENERATE = VERTICES_PER_RUN_NOT_DEGENERATE / (lod );
+    float runIndex = mod(gl_VertexID, V_PER_RUN);
+    float clampedIndex = clamp(runIndex - 1.0, 0.0, V_PER_RUN_NOT_DEGENERATE); // First and last are degenerate
 
     // here we need to add 
     // both in x and the z the posiotion of the chunk (if we want to load more chunks)
     // X increments every 2 vertices
-    float xPos = floor(clampedIndex/ 2.0);
+    float xPos = floor(clampedIndex / 2.0) * lod;
 
 
     // Z increments every N vertices
-    float zPos = floor(gl_VertexID / VERTICES_PER_RUN);
+    float zPos = floor(gl_VertexID  / (V_PER_RUN)) *(lod);
 
 
     // Move every 2nd vertex 1 unit on the z axis, to create a triangle
-    zPos += mod(clampedIndex, 2.0);
+    zPos += mod(clampedIndex, 2.0) * lod;
 
     // Render to the screen
     vec3 pos = vec3(xPos, aAltitude, zPos);
@@ -83,7 +85,7 @@ void main()
 
 
     // Calculate barycentric stuff for the wireframe
-    int baryIndex = int(mod(clampedIndex, 3));
+    int baryIndex = int(mod(clampedIndex, 12));
 
     if (baryIndex == 0)
         vBary = vec2(0.0, 0.0);
