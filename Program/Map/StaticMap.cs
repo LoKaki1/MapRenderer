@@ -17,6 +17,12 @@ public unsafe class StaticMap
 
 
     public HeightmapVertexBuffer Buffer { get; set; }
+
+    private readonly int m_LevelOfDetails;
+    private readonly int m_HeightmapSize;
+    private readonly int m_VerticiesPerRun;
+    private readonly int m_VerticiesPerChunk;
+    private readonly int m_VerticiesPerRunNotDegenerate;
     private readonly CameraController m_Camera;
 
     private readonly IKeyboard m_Keyboard;
@@ -26,15 +32,22 @@ public unsafe class StaticMap
     public bool IsRendering { get; private set; }
 
     public StaticMap(CameraController cameraController,
-                     IKeyboard keyboard)
+                     IKeyboard keyboard,
+                     int levelOfDetails = 1)
     {
         Buffer = new();
+        m_LevelOfDetails = levelOfDetails;
+        m_HeightmapSize = Constants.HEIGHTMAP_SIZE;
+        // The magic number may need to change dependes of the level 
+        m_VerticiesPerRun = m_HeightmapSize * 2 + 4;
+        m_VerticiesPerChunk = m_VerticiesPerRun * m_HeightmapSize;
+        m_VerticiesPerRunNotDegenerate = m_VerticiesPerRun - 3;
 
         m_Camera = cameraController;
         GenerateBuffer(MathF.PI / 2.0f);
 
         m_Keyboard = keyboard;
-        HeightMapShader = ShaderLoader.CreateDemo();
+        HeightMapShader = ShaderLoader.CreateHeightmap("./Shaders/HeightMap/VertexShader.glsl", "./Shaders/HeightMap/FragmentShader.glsl");
     }
 
     float GetHeight(int x, int z, float height) => MathF.Sin((x + height) * 0.5f) + MathF.Cos((z + height) * 0.25f) * 8;
@@ -42,93 +55,11 @@ public unsafe class StaticMap
     void GenerateBuffer(float height)
     {
         IsUpdating = true;
-        var bytes_vertexData = Marshal.SizeOf<HeightmapVertex>() * Constants.VERTICES_PER_CHUNK;
+        var bytes_vertexData = Marshal.SizeOf<HeightmapVertex>() * m_VerticiesPerChunk / m_LevelOfDetails;
         var offset = (HeightmapVertex*)Allocator.Alloc(bytes_vertexData);
         var write = offset;
-        // Here what we want is to create a for loop that iterate on all level of details
-        // if the the size is 1024 
-        // then we want the level of detail to be bigger then its previous,
-        // For example -
-        // All the chunk is 1024
-        // the the first level of details we go throught each vertex lets assume it has 64 x 64
-        // then we'll go on the second which will 128 x 128
-        // then 256 x 256
-        // etc
-        // imagine this - 
-        //
-        // 3 3 3 3 3 3 3
-        // 3 3 3 3 3 3 3
-        // 3 3 3 3 3 3 3
-        // 2 2 2 2 3 3 3
-        // 2 2 2 2 3 3 3 
-        // 1 1 2 2 3 3 3 
-        // Y 1 2 2 3 3 3
-        // 1 1 2 2 3 3 3
-        // 2 2 2 2 3 3 3
-        // 2 2 2 2 3 3 3
-        // 3 3 3 3 3 3 3
-        // 3 3 3 3 3 3 3
-        // 3 3 3 3 3 3 3
-        // assume I did the (3) 4 times
-        // Each level of detail shows twices time from the level that was previous
 
-        // To start we need to calculate how many levels we (that of course dependes on the chunk 
-        // size and the camera pos from its origin to get the origin of course we need some how to get 
-        // its gl_position and that what will do tommrow)
-
-        // var levels = Math.Log2(Constants.HEIGHTMAP_SIZE);
-
-        // for (int i = 0; i < levels; i++)
-        // {
-        //     // for start lets just caluculate the chunk size base on the idea above
-        //     // every level should contains the same number of vertcies
-        //     // how do we do that?
-        //     // first lets say how many layers we want 
-
-        //     // then to we need to calculate how many vertecies are in the layer
-
-
-        //     int stepSize = 1 << i; // 1, 2, 4, 8, 16, ...
-
-        //     var layers = stepSize * stepSize;
-        //     for (int z = 0; z < layers; z += stepSize) {
-        //         int x = 0;
-
-        //         var altitude0 = GetHeight(x, z);
-        //         var altitude1 = GetHeight(x, z + stepSize);
-        //         var altitude2 = GetHeight(x + stepSize, z);
-
-        //         // First vertex is a degenerate (to restart triangle strip)
-        //         write++->Reset(altitude0);
-
-        //         // Create the first triangle in the strip
-        //         write++->Reset(altitude0);
-        //         write++->Reset(altitude1);
-        //         write++->Reset(altitude2);
-
-        //         // Iterate through the rest of the strip with stepSize
-        //         x += stepSize;
-        //         var altitude = GetHeight(x, z + stepSize);
-        //         write++->Reset(altitude);
-
-        //         x += stepSize;
-        //         for (; x <= layers; x += stepSize) {
-        //             altitude = GetHeight(x, z);
-        //             write++->Reset(altitude);
-
-        //             altitude = GetHeight(x, z + stepSize);
-        //             write++->Reset(altitude);
-        //         }
-
-        //         // Degenerate to end the strip
-        //         altitude = GetHeight(x - stepSize, z + stepSize);
-        //         write++->Reset(altitude);
-        //     }
-
-        //     // now we iterate on each of the rows and append this to the frame buffer
-        // } 
-        var heightMapSize = Constants.HEIGHTMAP_SIZE;
-        for (int z = 0; z < heightMapSize; z++)
+        for (int z = 0; z < m_HeightmapSize; z++)
         {
             // Generate 32 triangle strips
             int x = 0;
@@ -153,7 +84,7 @@ public unsafe class StaticMap
             write++->Reset(altitude);
 
             x += 1;
-            for (; x <= heightMapSize; x++)
+            for (; x <= m_HeightmapSize; x++)
             {
                 altitude = GetHeight(x, z, height);
                 write++->Reset(altitude);
@@ -177,7 +108,7 @@ public unsafe class StaticMap
     public void BufferData(HeightmapVertex* offset, int bytes_vertexData)
 
     {
-        Buffer.BufferData(Constants.VERTICES_PER_CHUNK, offset);
+        Buffer.BufferData(m_VerticiesPerChunk, offset);
         Allocator.Free(ref offset, ref bytes_vertexData);
         IsUpdating = false;
     }
@@ -201,6 +132,8 @@ public unsafe class StaticMap
         HeightMapShader.ModelViewProjectionMatrix.Set(projection);
         var isSpacePressed = m_Keyboard.IsKeyPressed(Key.Space);
         HeightMapShader.ShowWireframe.Set(isSpacePressed);
+        HeightMapShader.PerRun.Set(m_VerticiesPerRun);
+        HeightMapShader.PerRunNotDeg.Set(m_VerticiesPerRunNotDegenerate);
 
         Gl.FrontFace(FrontFaceDirection.Ccw);
         Buffer.primitiveType = PrimitiveType.TriangleStrip;

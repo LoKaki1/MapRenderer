@@ -22,8 +22,8 @@ public class ShaderProgram
     {
         try
         {
-            m_VertexShader = new Shader(ShaderType.VertexShader, VERSION + vertexShaderSource);
-            m_FragmentShader = new Shader(ShaderType.FragmentShader, VERSION + fragmentShaderSource);
+            m_VertexShader = new Shader(ShaderType.VertexShader, vertexShaderSource);
+            m_FragmentShader = new Shader(ShaderType.FragmentShader, fragmentShaderSource);
         }
         catch (Exception e)
         {

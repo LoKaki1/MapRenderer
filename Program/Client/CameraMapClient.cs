@@ -86,7 +86,7 @@ public unsafe class CameraMapClient
         m_Camera?.Update();
         if (m_Count > 1)
         {
-            m_Map.Update();
+            m_Map?.Update();
             m_Count = 0;
         }
         m_Count++;
