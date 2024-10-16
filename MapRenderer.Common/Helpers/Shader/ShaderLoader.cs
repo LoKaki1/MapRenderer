@@ -5,7 +5,8 @@ namespace MapRenderer.Common.Helpers.Shader;
 
 public static class ShaderLoader
 {
-
+    static string m_FragmentCache = string.Empty;
+    static string m_VertexChache = string.Empty;
     public static ShaderProgram CreateProgram(string vertexShaderPath,
                                               string fragmentShaderPath)
     {
@@ -19,10 +20,13 @@ public static class ShaderLoader
 
     public static HeightMapShader CreateHeightmap(string verteciesShaderPath, string fractShaderPath)
     {
-        var vertexShaderSource = File.ReadAllText(verteciesShaderPath);
-        var fragmentShaderSource = File.ReadAllText(fractShaderPath);
+        if (string.IsNullOrEmpty(m_FragmentCache) || string.IsNullOrEmpty(m_VertexChache))
+        {
+            m_VertexChache = File.ReadAllText(verteciesShaderPath);
+            m_FragmentCache = File.ReadAllText(fractShaderPath);
+        }
 
-        var program = new HeightMapShader(vertexShaderSource, fragmentShaderSource);
+        var program = new HeightMapShader(m_VertexChache, m_FragmentCache);
 
         return program;
     }

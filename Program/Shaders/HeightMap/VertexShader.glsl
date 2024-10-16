@@ -8,6 +8,7 @@ flat out float vBrightness;
 uniform mat4 mvp;
 uniform float verteciesPerRun;
 uniform float verteciesPerRunNotDeg;
+uniform float lod;
 
 float rand3(vec3 c) { return fract(sin(dot(c.xyz, vec3(12.9898, 78.233, 133.719))) * 43758.5453);  }
 
@@ -15,7 +16,7 @@ void main()
 {    
     float runIndex = mod(gl_VertexID, verteciesPerRun);
     
-    float trianglesSize = 4;
+    float trianglesSize = lod;
     float clampedIndex = clamp(runIndex - 1.0, 0.0, verteciesPerRunNotDeg); // First and last are degenerate
 
     // here we need to add 

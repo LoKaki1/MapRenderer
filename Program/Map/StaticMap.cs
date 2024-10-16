@@ -1,5 +1,5 @@
-using System;
 using System.Runtime.InteropServices;
+using System;
 using MapRenderer.Camera;
 using MapRenderer.Common.Helpers;
 using MapRenderer.Common.Helpers.Memory;
@@ -18,11 +18,11 @@ public unsafe class StaticMap
 
     public HeightmapVertexBuffer Buffer { get; set; }
 
-    private readonly int m_LevelOfDetails;
-    private readonly int m_HeightmapSize;
-    private readonly int m_VerticiesPerRun;
-    private readonly int m_VerticiesPerChunk;
-    private readonly int m_VerticiesPerRunNotDegenerate;
+    private int m_LevelOfDetails;
+    private int m_HeightmapSize;
+    private int m_VerticiesPerRun;
+    private int m_VerticiesPerChunk;
+    private int m_VerticiesPerRunNotDegenerate;
     private readonly CameraController m_Camera;
 
     private readonly IKeyboard m_Keyboard;
@@ -33,8 +33,8 @@ public unsafe class StaticMap
 
     public StaticMap(CameraController cameraController,
                      IKeyboard keyboard,
-                     int levelOfDetails = 4,
-                     int heightMapSize = 8192)
+                     int levelOfDetails = 2,
+                     int heightMapSize = 128)
     {
         Buffer = new();
         m_LevelOfDetails = levelOfDetails;
@@ -53,9 +53,13 @@ public unsafe class StaticMap
 
     float GetHeight(int x, int z, float height) => MathF.Sin((x + height) * 0.5f) + MathF.Cos((z + height) * 0.25f) * 8;
 
-    void GenerateBuffer(float height)
+    void GenerateBuffer(float height, int levelOfDetails = -1)
     {
         IsUpdating = true;
+        if (levelOfDetails != -1)
+        {
+            m_LevelOfDetails = levelOfDetails;
+        }
         var bytes_vertexData = Marshal.SizeOf<HeightmapVertex>() * m_VerticiesPerChunk;
         var offset = (HeightmapVertex*)Allocator.Alloc(bytes_vertexData);
         var write = offset;
@@ -112,9 +116,9 @@ public unsafe class StaticMap
 
         DispatcherQueue.Enqueue(() => BufferData(offset, bytes_vertexData));
     }
-    public void Update(float height)
+    public void Update(float height, int levelOfDetails = -1)
     {
-        Task.Run(() => GenerateBuffer(height));
+        Task.Run(() => GenerateBuffer(height, levelOfDetails));
     }
     public void BufferData(HeightmapVertex* offset, int bytes_vertexData)
 
@@ -123,16 +127,6 @@ public unsafe class StaticMap
         Allocator.Free(ref offset, ref bytes_vertexData);
         IsUpdating = false;
     }
-    //     int CalculateLODLevel(const Vector3& cameraPosition, const Vector3& chunkCenter) {
-    //     float distance = length(cameraPosition - chunkCenter);
-
-    //     // Determine LOD level based on distance (tune distance thresholds as needed)
-    //     if (distance < 100.0f) return 0; // Highest detail
-    //     else if (distance < 200.0f) return 1;
-    //     else if (distance < 400.0f) return 2;
-    //     else if (distance < 800.0f) return 3;
-    //     else return 4; // Lowest detail
-    // }
 
     public void Render()
     {
@@ -145,6 +139,7 @@ public unsafe class StaticMap
         HeightMapShader.ShowWireframe.Set(isSpacePressed);
         HeightMapShader.PerRun.Set(m_VerticiesPerRun);
         HeightMapShader.PerRunNotDeg.Set(m_VerticiesPerRunNotDegenerate);
+        HeightMapShader.Lod.Set(m_LevelOfDetails);
 
         Gl.FrontFace(FrontFaceDirection.Ccw);
         Buffer.primitiveType = PrimitiveType.TriangleStrip;

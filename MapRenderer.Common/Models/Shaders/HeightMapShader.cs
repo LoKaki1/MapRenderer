@@ -12,6 +12,7 @@ public class HeightMapShader
     public ShaderValue<bool> ShowWireframe { get; set; }
     public ShaderValue<float> PerRun { get; set; }
     public ShaderValue<float> PerRunNotDeg { get; set; }
+    public ShaderValue<float> Lod { get; set; }
     public HeightMapShader(string vertexShader, string fragmentShader)
     {
         Shader = new(vertexShader, fragmentShader);
@@ -20,6 +21,7 @@ public class HeightMapShader
         ShowWireframe = new(Shader, "showWireframe");
         PerRun = new(Shader, "verteciesPerRun");
         PerRunNotDeg = new(Shader, "verteciesPerRunNotDeg");
+        Lod = new(Shader, "lod");
     }
 
     public void UseProgram()
