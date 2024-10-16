@@ -42,8 +42,7 @@ public unsafe class StaticMap
     void GenerateBuffer(float height)
     {
         IsUpdating = true;
-        var lod = 4;
-        var bytes_vertexData = Marshal.SizeOf<HeightmapVertex>() * Constants.VERTICES_PER_CHUNK / lod;
+        var bytes_vertexData = Marshal.SizeOf<HeightmapVertex>() * Constants.VERTICES_PER_CHUNK;
         var offset = (HeightmapVertex*)Allocator.Alloc(bytes_vertexData);
         var write = offset;
         // Here what we want is to create a for loop that iterate on all level of details
@@ -128,7 +127,7 @@ public unsafe class StaticMap
 
         //     // now we iterate on each of the rows and append this to the frame buffer
         // } 
-        var heightMapSize = Constants.HEIGHTMAP_SIZE / lod;
+        var heightMapSize = Constants.HEIGHTMAP_SIZE;
         for (int z = 0; z < heightMapSize; z++)
         {
             // Generate 32 triangle strips
@@ -169,16 +168,16 @@ public unsafe class StaticMap
             write++->Reset(altitude);
         }
 
-        DispatcherQueue.Enqueue(() => BufferData(offset, bytes_vertexData, lod));
+        DispatcherQueue.Enqueue(() => BufferData(offset, bytes_vertexData));
     }
     public void Update(float height)
     {
         Task.Run(() => GenerateBuffer(height));
     }
-    public void BufferData(HeightmapVertex* offset, int bytes_vertexData, int lod)
+    public void BufferData(HeightmapVertex* offset, int bytes_vertexData)
 
     {
-        Buffer.BufferData(Constants.VERTICES_PER_CHUNK / lod, offset);
+        Buffer.BufferData(Constants.VERTICES_PER_CHUNK, offset);
         Allocator.Free(ref offset, ref bytes_vertexData);
         IsUpdating = false;
     }

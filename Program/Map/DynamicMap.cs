@@ -17,7 +17,7 @@ public class DynamicMap
         m_Camera = camera;
         m_Keyboard = keyboard;
         m_Chunks = new List<StaticMap>();
-        m_Update = 0.001f;
+        m_Update = 0.1f;
     }
 
     public void Update()
@@ -37,7 +37,6 @@ public class DynamicMap
 
         var newChunk = new StaticMap(m_Camera, m_Keyboard);
         m_Chunks.Add(newChunk);
-        m_Update++;
 
     }
 
