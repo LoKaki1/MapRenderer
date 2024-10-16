@@ -33,11 +33,12 @@ public unsafe class StaticMap
 
     public StaticMap(CameraController cameraController,
                      IKeyboard keyboard,
-                     int levelOfDetails = 1)
+                     int levelOfDetails = 4,
+                     int heightMapSize = 8192)
     {
         Buffer = new();
         m_LevelOfDetails = levelOfDetails;
-        m_HeightmapSize = Constants.HEIGHTMAP_SIZE;
+        m_HeightmapSize = heightMapSize / m_LevelOfDetails;
         // The magic number may need to change dependes of the level 
         m_VerticiesPerRun = m_HeightmapSize * 2 + 4;
         m_VerticiesPerChunk = m_VerticiesPerRun * m_HeightmapSize;
@@ -55,13 +56,17 @@ public unsafe class StaticMap
     void GenerateBuffer(float height)
     {
         IsUpdating = true;
-        var bytes_vertexData = Marshal.SizeOf<HeightmapVertex>() * m_VerticiesPerChunk / m_LevelOfDetails;
+        var bytes_vertexData = Marshal.SizeOf<HeightmapVertex>() * m_VerticiesPerChunk;
         var offset = (HeightmapVertex*)Allocator.Alloc(bytes_vertexData);
         var write = offset;
-
+        var gon = 0;
         for (int z = 0; z < m_HeightmapSize; z++)
         {
             // Generate 32 triangle strips
+            if (gon >= bytes_vertexData - 6 + m_HeightmapSize * 2)
+            {
+                break;
+            }
             int x = 0;
 
             var altitude0 = GetHeight(x, z, height);
@@ -77,13 +82,13 @@ public unsafe class StaticMap
             write++->Reset(altitude0);
             write++->Reset(altitude1);
             write++->Reset(altitude2);
-
             // Rest of the strip
             x += 1;
             var altitude = GetHeight(x, z + 1, height);
             write++->Reset(altitude);
 
             x += 1;
+            gon += 5;
             for (; x <= m_HeightmapSize; x++)
             {
                 altitude = GetHeight(x, z, height);
@@ -91,12 +96,18 @@ public unsafe class StaticMap
 
                 altitude = GetHeight(x, z + 1, height);
                 write++->Reset(altitude);
+
+                gon += 2;
             }
 
 
             // Degenerate
             altitude = GetHeight(x - 1, z + 1, height);
             write++->Reset(altitude);
+
+            gon += 1;
+
+
         }
 
         DispatcherQueue.Enqueue(() => BufferData(offset, bytes_vertexData));
