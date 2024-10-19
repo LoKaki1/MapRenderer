@@ -31,7 +31,7 @@ public class DynamicMap
 
             chunk.Update(m_Update);
 
-            m_Update += 0.1f;
+            m_Update += 0.01f;
             return;
         }
 

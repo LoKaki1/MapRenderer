@@ -33,8 +33,8 @@ public unsafe class StaticMap
 
     public StaticMap(CameraController cameraController,
                      IKeyboard keyboard,
-                     int levelOfDetails = 2,
-                     int heightMapSize = 128)
+                     int levelOfDetails = 1,
+                     int heightMapSize = 1024)
     {
         Buffer = new();
         m_LevelOfDetails = levelOfDetails;
@@ -51,15 +51,12 @@ public unsafe class StaticMap
         HeightMapShader = ShaderLoader.CreateHeightmap("./Shaders/HeightMap/VertexShader.glsl", "./Shaders/HeightMap/FragmentShader.glsl");
     }
 
-    float GetHeight(int x, int z, float height) => MathF.Sin((x + height) * 0.5f) + MathF.Cos((z + height) * 0.25f) * 8;
+    float GetHeight(int x, int z, float height) => MathF.Sin((x + height) * m_LevelOfDetails * 0.5f) + MathF.Cos((z + height) * m_LevelOfDetails * 0.25f) * 8;
 
     void GenerateBuffer(float height, int levelOfDetails = -1)
     {
         IsUpdating = true;
-        if (levelOfDetails != -1)
-        {
-            m_LevelOfDetails = levelOfDetails;
-        }
+
         var bytes_vertexData = Marshal.SizeOf<HeightmapVertex>() * m_VerticiesPerChunk;
         var offset = (HeightmapVertex*)Allocator.Alloc(bytes_vertexData);
         var write = offset;
