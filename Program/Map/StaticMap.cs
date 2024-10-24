@@ -34,7 +34,7 @@ public unsafe class StaticMap
     public StaticMap(CameraController cameraController,
                      IKeyboard keyboard,
                      int levelOfDetails = 1,
-                     int heightMapSize = 1024)
+                     int heightMapSize = 32)
     {
         Buffer = new();
         m_LevelOfDetails = levelOfDetails;

@@ -74,6 +74,10 @@ public unsafe class CameraMapClient
 
     private void OnFrameBufferResize(Vector2D<int> d)
     {
+        var currentWindow = (WindowHandle*)m_Window.Handle;
+        GLFW.GetFramebufferSize(currentWindow, out int width, out int height);
+
+        (m_Width, m_Height) = (width, height);
         Gl.Viewport(0, 0, (uint)m_Width, (uint)m_Height);
     }
 
