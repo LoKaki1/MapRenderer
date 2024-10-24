@@ -44,7 +44,7 @@ public class DynamicMap
             return;
         }
         var newChunk = new StaticMap(m_Camera, m_Keyboard ,levelOfDetails: 1);
-        m_Update += 0.5f;
+        m_Update += 0.1f;
         newChunk.Update(m_Update);
         m_Meshes.Insert(0, newChunk);
 
