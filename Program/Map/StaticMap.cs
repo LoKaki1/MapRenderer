@@ -34,7 +34,7 @@ public unsafe class StaticMap
     public StaticMap(CameraController cameraController,
                      IKeyboard keyboard,
                      int levelOfDetails = 1,
-                     int heightMapSize = 32)
+                     int heightMapSize = 256)
     {
         Buffer = new();
         m_LevelOfDetails = levelOfDetails;
@@ -45,7 +45,7 @@ public unsafe class StaticMap
         m_VerticiesPerRunNotDegenerate = m_VerticiesPerRun - 3;
 
         m_Camera = cameraController;
-        GenerateBuffer(MathF.PI / 2.0f);
+        //GenerateBuffer(MathF.PI / 2.0f);
 
         m_Keyboard = keyboard;
         HeightMapShader = ShaderLoader.CreateHeightmap("VertexShader.glsl", "FragmentShader.glsl");
@@ -63,11 +63,7 @@ public unsafe class StaticMap
         var gon = 0;
         for (int z = 0; z < m_HeightmapSize; z++)
         {
-            // Generate 32 triangle strips
-            if (gon >= bytes_vertexData - 6 + m_HeightmapSize * 2)
-            {
-                break;
-            }
+  
             int x = 0;
 
             var altitude0 = GetHeight(x, z, height);
@@ -112,10 +108,12 @@ public unsafe class StaticMap
         }
 
         DispatcherQueue.Enqueue(() => BufferData(offset, bytes_vertexData));
+        //BufferData(offset, bytes_vertexData);
     }
     public void Update(float height, int levelOfDetails = -1)
     {
         Task.Run(() => GenerateBuffer(height, levelOfDetails));
+        //GenerateBuffer(height, levelOfDetails);
     }
     public void BufferData(HeightmapVertex* offset, int bytes_vertexData)
 
@@ -129,11 +127,12 @@ public unsafe class StaticMap
     {
         // Prepare the shader
         IsRendering = true;
+
         HeightMapShader.UseProgram();
         var projection = m_Camera.GetViewProjection();
         HeightMapShader.ModelViewProjectionMatrix.Set(projection);
         var isSpacePressed = m_Keyboard.IsKeyPressed(Key.Space);
-        HeightMapShader.ShowWireframe.Set(isSpacePressed);
+        HeightMapShader.ShowWireframe.Set(!isSpacePressed);
         HeightMapShader.PerRun.Set(m_VerticiesPerRun);
         HeightMapShader.PerRunNotDeg.Set(m_VerticiesPerRunNotDegenerate);
         HeightMapShader.Lod.Set(m_LevelOfDetails);
@@ -143,4 +142,5 @@ public unsafe class StaticMap
         Buffer.BindAndDraw();
         IsRendering = false;
     }
+
 }

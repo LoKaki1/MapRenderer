@@ -88,12 +88,9 @@ public unsafe class CameraMapClient
     private void Render()
     {
         m_Camera?.Update();
-        if (m_Count > 1)
-        {
+       
             m_Map?.Update();
-            m_Count = 0;
-        }
-        m_Count++;
+       
         PreRenderSetup();
         m_Map?.Render();
 
@@ -106,22 +103,22 @@ public unsafe class CameraMapClient
     void PreRenderSetup()
     {
         // Prepare rendering
-        Gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-        Gl.Enable(EnableCap.DepthTest);
-        Gl.Disable(EnableCap.Blend);
-        Gl.Disable(EnableCap.StencilTest);
-        Gl.Enable(EnableCap.CullFace);
-        Gl.FrontFace(FrontFaceDirection.CW);
+        //Gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+        //Gl.Enable(EnableCap.DepthTest);
+        //Gl.Disable(EnableCap.Blend);
+        //Gl.Disable(EnableCap.StencilTest);
+        //Gl.Enable(EnableCap.CullFace);
+        //Gl.FrontFace(FrontFaceDirection.CW);
 
 
         // Clear everything
-        Gl.ClearDepth(1.0f);
-        Gl.DepthFunc(DepthFunction.Less);
+        //Gl.ClearDepth(1.0f);
+        //Gl.DepthFunc(DepthFunction.Less);
 
-        Gl.ColorMask(true, true, true, true);
-        Gl.DepthMask(true);
+        //Gl.ColorMask(true, true, true, true);
+        //Gl.DepthMask(true);
 
-        Gl.ClearColor(0, 0, 0, 0);
+        Gl.ClearColor(0, 0,0, 0);
         Gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
     }
 }
