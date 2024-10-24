@@ -48,10 +48,10 @@ public unsafe class StaticMap
         GenerateBuffer(MathF.PI / 2.0f);
 
         m_Keyboard = keyboard;
-        HeightMapShader = ShaderLoader.CreateHeightmap("./Shaders/HeightMap/VertexShader.glsl", "./Shaders/HeightMap/FragmentShader.glsl");
+        HeightMapShader = ShaderLoader.CreateHeightmap("VertexShader.glsl", "FragmentShader.glsl");
     }
 
-    float GetHeight(int x, int z, float height) => MathF.Sin((x + height) * m_LevelOfDetails * 0.5f) + MathF.Cos((z + height) * m_LevelOfDetails * 0.25f) * 8;
+    float GetHeight(int x, int z, float height) => MathF.Sin((x + height) * m_LevelOfDetails * 0.5f) + MathF.Cos((z + height) * m_LevelOfDetails * 0.25f) * m_LevelOfDetails;
 
     void GenerateBuffer(float height, int levelOfDetails = -1)
     {

@@ -12,4 +12,17 @@
     <ProjectReference Include="..\MapRenderer.Common\MapRenderer.Common.csproj" />
   </ItemGroup>
 
+	<ItemGroup>
+		<!-- Define the directory to copy from -->
+		<Shaders Include="Shaders\**\*" />
+	</ItemGroup>
+
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<Copy
+		  SourceFiles="@(Shaders)"
+		  DestinationFolder="$(TargetDir)"
+		  SkipUnchangedFiles="true" />
+	</Target>
+
+
 </Project>
