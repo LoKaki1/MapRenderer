@@ -13,7 +13,6 @@
   </ItemGroup>
 
 	<ItemGroup>
-		<!-- Define the directory to copy from -->
 		<Shaders Include="Shaders\**\*" />
 	</ItemGroup>
 

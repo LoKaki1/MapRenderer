@@ -81,7 +81,7 @@ public class CameraController
 
         if (m_Keyboard.IsKeyPressed(Key.ShiftLeft))
         {
-            movementSpeed *= 6;
+            movementSpeed *= 16;
         }
         if (m_Keyboard.IsKeyPressed(Key.W))
             CameraPos += CameraCauclations.FromPitchYaw(Pitch, Yaw) * movementSpeed;
