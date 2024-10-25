@@ -20,6 +20,7 @@ public unsafe class StaticMap
 
     private int m_LevelOfDetails;
     private int m_HeightmapSize;
+    private int m_HeightmapSizeLod;
     private int m_VerticiesPerRun;
     private int m_VerticiesPerChunk;
     private int m_VerticiesPerRunNotDegenerate;
@@ -38,14 +39,13 @@ public unsafe class StaticMap
     {
         Buffer = new();
         m_LevelOfDetails = levelOfDetails;
-        m_HeightmapSize = heightMapSize / m_LevelOfDetails;
-        // The magic number may need to change dependes of the level 
-        m_VerticiesPerRun = m_HeightmapSize * 2 + 4;
-        m_VerticiesPerChunk = m_VerticiesPerRun * m_HeightmapSize;
+        m_HeightmapSize = heightMapSize;
+        m_HeightmapSizeLod = heightMapSize / m_LevelOfDetails;
+        m_VerticiesPerRun = m_HeightmapSizeLod * 2 + 4;
+        m_VerticiesPerChunk = m_VerticiesPerRun * m_HeightmapSizeLod;
         m_VerticiesPerRunNotDegenerate = m_VerticiesPerRun - 3;
 
         m_Camera = cameraController;
-        //GenerateBuffer(MathF.PI / 2.0f);
 
         m_Keyboard = keyboard;
         HeightMapShader = ShaderLoader.CreateHeightmap("VertexShader.glsl", "FragmentShader.glsl");
@@ -57,13 +57,22 @@ public unsafe class StaticMap
     {
         IsUpdating = true;
 
+        if (levelOfDetails != -1)
+        {
+            m_LevelOfDetails = levelOfDetails;
+            m_HeightmapSizeLod = m_HeightmapSize / m_LevelOfDetails;
+            m_VerticiesPerRun = m_HeightmapSizeLod * 2 + 4;
+            m_VerticiesPerChunk = m_VerticiesPerRun * m_HeightmapSizeLod;
+            m_VerticiesPerRunNotDegenerate = m_VerticiesPerRun - 3;
+        }
+
         var bytes_vertexData = Marshal.SizeOf<HeightmapVertex>() * m_VerticiesPerChunk;
         var offset = (HeightmapVertex*)Allocator.Alloc(bytes_vertexData);
         var write = offset;
-        var gon = 0;
-        for (int z = 0; z < m_HeightmapSize; z++)
+
+
+        for (int z = 0; z < m_HeightmapSizeLod; z++)
         {
-  
             int x = 0;
 
             var altitude0 = GetHeight(x, z, height);
@@ -85,8 +94,8 @@ public unsafe class StaticMap
             write++->Reset(altitude);
 
             x += 1;
-            gon += 5;
-            for (; x <= m_HeightmapSize; x++)
+
+            for (; x <= m_HeightmapSizeLod; x++)
             {
                 altitude = GetHeight(x, z, height);
                 write++->Reset(altitude);
@@ -94,27 +103,20 @@ public unsafe class StaticMap
                 altitude = GetHeight(x, z + 1, height);
                 write++->Reset(altitude);
 
-                gon += 2;
             }
-
 
             // Degenerate
             altitude = GetHeight(x - 1, z + 1, height);
             write++->Reset(altitude);
-
-            gon += 1;
-
-
         }
 
         DispatcherQueue.Enqueue(() => BufferData(offset, bytes_vertexData));
-        //BufferData(offset, bytes_vertexData);
     }
     public void Update(float height, int levelOfDetails = -1)
     {
         Task.Run(() => GenerateBuffer(height, levelOfDetails));
-        //GenerateBuffer(height, levelOfDetails);
     }
+
     public void BufferData(HeightmapVertex* offset, int bytes_vertexData)
 
     {
@@ -132,7 +134,7 @@ public unsafe class StaticMap
         var projection = m_Camera.GetViewProjection();
         HeightMapShader.ModelViewProjectionMatrix.Set(projection);
         var isSpacePressed = m_Keyboard.IsKeyPressed(Key.Space);
-        HeightMapShader.ShowWireframe.Set(!isSpacePressed);
+        HeightMapShader.ShowWireframe.Set(isSpacePressed);
         HeightMapShader.PerRun.Set(m_VerticiesPerRun);
         HeightMapShader.PerRunNotDeg.Set(m_VerticiesPerRunNotDegenerate);
         HeightMapShader.Lod.Set(m_LevelOfDetails);

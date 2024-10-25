@@ -22,7 +22,7 @@ public class CameraController
     float FieldOfView { get; set; } = 50.0f / 180.0f * MathF.PI;
     float Aspect => m_Window.Size.X / (float)m_Window.Size.Y;
     float NearPlane { get; set; } = 1.0f;
-    float FarPlane { get; set; } = 1024.0f;
+    float FarPlane { get; set; } = 16384f;
 
     public CameraController(IKeyboard m_Keyboard, IMouse Mouse, IWindow Window)
     {

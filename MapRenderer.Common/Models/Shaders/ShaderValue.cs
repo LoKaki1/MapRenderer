@@ -31,9 +31,19 @@ public unsafe class ShaderValue<T>
                         }
                     }
             },
+            {
+                typeof(Vector3),
+                (location, value) =>
+                    {
+                        if (value is Vector3 v3)
+                        {
+                            Gl.Uniform3(location, ref v3);
+                        }
+                    }
+            },
             {typeof(bool), (location, value) => Gl.Uniform1(location, (value is bool p) ? p ? 1 : 0  : 0)},
             {
-                typeof(System.Numerics.Matrix4x4), 
+                typeof(System.Numerics.Matrix4x4),
                 (location, value) =>
                     {
                        float* fixedData = (float*)&value;;
